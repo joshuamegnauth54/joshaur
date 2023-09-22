@@ -1,0 +1,39 @@
+# Maintainer: Josh Megnauth <jo.sh@tutanota.com>
+
+pkgname=biome
+pkgver=1.4.1
+pkgrel=1
+pkgdesc="Formatter, linter, bundler, and more for Javascript, Typescript, JSON, HTML, Markdown, and CSS"
+arch=(x86_64)
+url="https://biomejs.dev"
+license=(MIT)
+makedepends=(cargo)
+conflicts=(rome)
+_archive="v$pkgver"
+source=("$pkgname-$pkgver.tar.gz::https://github.com/biomejs/$pkgname/archive/lsp/$_archive.tar.gz")
+sha512sums=("a35bece56cd8094593a99b9ab736deb07310e4a6582807dc2b4eeca06ac8d2ef37d818329a1a82d121141b68c23a8df52efcc172738e4790cc974ffef3b42b0e")
+
+prepare() {
+	cd "$pkgname-lsp-$_archive"
+	cargo fetch --locked --target "$CARCH-unknown-linux-gnu"
+}
+
+build() {
+	cd "$pkgname-lsp-$_archive"
+	export RUSTUP_TOOLCHAIN=stable
+	export CARGO_TARGET_DIR=target
+	cargo build -p biome_cli --frozen --release --all-features
+}
+
+check() {
+	cd "$pkgname-lsp-$_archive"
+	export RUSTUP_TOOLCHAIN=stable
+	cargo test -p biome_cli --frozen --all-features
+}
+
+package() {
+	cd "$pkgname-lsp-$_archive"
+	install -Dm0755 -t "$pkgdir/usr/bin/" "target/release/$pkgname"
+	install -Dm0644 -t "$pkgdir/usr/share/licenses/$pkgname/" "LICENSE"
+}
+
